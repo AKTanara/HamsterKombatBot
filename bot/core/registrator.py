@@ -32,8 +32,6 @@ async def register_sessions():
         api_hash=API_HASH,
         workdir="sessions/",
         proxy=proxy_dict,
-        device_model = "Samsung Galaxy S24 Ultra",
-        app_version = "11.1.3"
     )
 
     async with session:
