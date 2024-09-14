@@ -1,6 +1,6 @@
 from time import time
-from typing import Any, Union, Dict, List, Optional, Tuple
-
+from typing import Any
+from bot.utils.logger import logger
 import aiohttp
 
 from bot.api.http import make_request
@@ -8,11 +8,15 @@ from bot.api.http import make_request
 
 async def get_version_config(
         http_client: aiohttp.ClientSession, config_version: str
-) -> Union[Dict[Any, Any], Any]:
+) -> dict[Any, Any] | Any:
+
+    url=f'https://api.hamsterkombatgame.io/clicker/config/{config_version}'
+    response = await http_client.request(method='OPTIONS', url=url, json={}, ssl=False)
+    
     response_json = await make_request(
         http_client,
         'GET',
-        f'https://api.hamsterkombatgame.io/clicker/config/{config_version}',
+        url,
         {},
         'getting Version Config',
     )
@@ -23,11 +27,15 @@ async def get_version_config(
 
 async def get_game_config(
         http_client: aiohttp.ClientSession,
-) -> Union[Dict[Any, Any], Any]:
+) -> dict[Any, Any] | Any:
+    
+    url='https://api.hamsterkombatgame.io/clicker/config'
+    response = await http_client.request(method='OPTIONS', url=url, json={}, ssl=False)
+    
     response_json = await make_request(
         http_client,
         'POST',
-        'https://api.hamsterkombatgame.io/clicker/config',
+        url,
         {},
         'getting Game Config',
     )
@@ -35,12 +43,16 @@ async def get_game_config(
     return response_json
 
 
-async def get_profile_data(http_client: aiohttp.ClientSession) -> Dict[str, Any]:
+async def get_profile_data(http_client: aiohttp.ClientSession) -> dict[str]:
     while True:
+    
+        url='https://api.hamsterkombatgame.io/clicker/sync'
+        response = await http_client.request(method='OPTIONS', url=url, json={}, ssl=False)
+        
         response_json = await make_request(
             http_client,
             'POST',
-            'https://api.hamsterkombatgame.io/clicker/sync',
+            url,
             {},
             'getting Profile Data',
             ignore_status=422,
@@ -54,10 +66,13 @@ async def get_profile_data(http_client: aiohttp.ClientSession) -> Dict[str, Any]
 async def get_ip_info(
         http_client: aiohttp.ClientSession
 ) -> dict:
+    url = 'https://api.hamsterkombatgame.io/ip'
+    response = await http_client.request(method='OPTIONS', url=url, json={}, ssl=False)
+
     response_json = await make_request(
         http_client,
         'POST',
-        'https://api.hamsterkombatgame.io/ip',
+        url,
         {},
         'getting Ip Info',
     )
@@ -67,10 +82,13 @@ async def get_ip_info(
 async def get_account_info(
         http_client: aiohttp.ClientSession
 ) -> dict:
+    url = 'https://api.hamsterkombatgame.io/auth/account-info'
+    response = await http_client.request(method='OPTIONS', url=url, json={}, ssl=False)
+    
     response_json = await make_request(
         http_client,
         'POST',
-        'https://api.hamsterkombatgame.io/auth/account-info',
+        url,
         {},
         'getting Account Info',
     )
@@ -80,10 +98,14 @@ async def get_account_info(
 async def get_skins(
         http_client: aiohttp.ClientSession
 ) -> dict:
+
+    url='https://api.hamsterkombatgame.io/clicker/get-skin'
+    response = await http_client.request(method='OPTIONS', url=url, json={}, ssl=False)
+    
     response_json = await make_request(
         http_client,
         'POST',
-        'https://api.hamsterkombatgame.io/clicker/get-skin',
+        url,
         {},
         'getting Skins',
     )
@@ -92,11 +114,15 @@ async def get_skins(
 
 async def send_taps(
         http_client: aiohttp.ClientSession, available_energy: int, taps: int
-) -> Union[Dict[Any, Any], Any]:
+) -> dict[Any, Any] | Any:
+
+    url='https://api.hamsterkombatgame.io/clicker/tap'
+    response = await http_client.request(method='OPTIONS', url=url, json={}, ssl=False)
+    
     response_json = await make_request(
         http_client,
         'POST',
-        'https://api.hamsterkombatgame.io/clicker/tap',
+        url,
         {
             'availableTaps': available_energy,
             'count': taps,
