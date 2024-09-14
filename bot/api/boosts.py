@@ -1,18 +1,20 @@
 from time import time
 
 import aiohttp
-from typing import Any, Union, Dict, List, Optional, Tuple
 
 from bot.api.http import make_request
 
 
 async def get_boosts(
         http_client: aiohttp.ClientSession
-) -> List[Dict]:
+) -> list[dict]:
+    url = 'https://api.hamsterkombatgame.io/clicker/boosts-for-buy'
+    response = await http_client.request(method='OPTIONS', url=url, json={}, ssl=False)
+
     response_json = await make_request(
         http_client,
         'POST',
-        'https://api.hamsterkombatgame.io/clicker/boosts-for-buy',
+        url,
         {},
         'getting Boosts',
     )
@@ -25,10 +27,13 @@ async def get_boosts(
 async def apply_boost(
         http_client: aiohttp.ClientSession, boost_id: str
 ) -> bool:
+    url = 'https://api.hamsterkombatgame.io/clicker/buy-boost'
+    response = await http_client.request(method='OPTIONS', url=url, json={}, ssl=False)
+
     response_json = await make_request(
         http_client,
         'POST',
-        'https://api.hamsterkombatgame.io/clicker/buy-boost',
+        url,
         {'timestamp': int(time()), 'boostId': boost_id},
         'Apply Boost',
     )
