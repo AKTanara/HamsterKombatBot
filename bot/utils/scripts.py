@@ -41,7 +41,7 @@ def escape_html(text: str):
 def decode_cipher(cipher: str):
     encoded = cipher[:3] + cipher[4:]
     return base64.b64decode(encoded).decode('utf-8')
-
+    
 
 def get_headers(name: str):
     db = JsonDB("profiles")
@@ -94,14 +94,65 @@ def get_mobile_user_agent():
 def generate_client_id():
     time_ms = int(time.time() * 1000)
     rand_num = "34" + str(random.randint(10000000000000000, 99999999999999999))
-
     return f"{time_ms}-{rand_num}"
+
+def get_or_generate_client_id(name: str, game: str):
+
+    game = game.lower().replace(' ','_')
+    db = JsonDB("profiles")
+    profiles = db.get_data()
+    user_id = profiles.get(name, {}).get(game+'_client_id', '')
+    
+    if user_id:
+        return user_id
+    else:
+        time_ms = int(time.time() * 1000)
+        rand_num = "34" + str(random.randint(10000000000000000, 99999999999999999))
+        user_id = f"{time_ms}-{rand_num}"
+        profiles[name][game+'_client_id'] = user_id
+        db.save_data(profiles)
+        return user_id
+
+def get_or_generate_client_id_1(name: str):
+
+    db = JsonDB("profiles")
+    profiles = db.get_data()
+    user_id = profiles.get(name, {}).get('promo_client_id', '')
+    
+    if user_id:
+        return user_id
+    else:
+        time_ms = int(time.time() * 1000)
+        rand_num = "34" + str(random.randint(10000000000000000, 99999999999999999))
+        user_id = f"{time_ms}-{rand_num}"
+        profiles[name]['promo_client_id'] = user_id
+        db.save_data(profiles)
+        return user_id
+
+def get_or_generate_client_id_2(name: str, game: str):
+
+    game = game.lower().replace(' ','_')
+    db = JsonDB("profiles")
+    profiles = db.get_data()
+    user_id = profiles.get(name, {}).get(game+'_client_id', '')
+    
+    if user_id:
+        return user_id
+    else:
+        new_user_id = str(uuid.uuid4())
+        profiles[name][game+'_client_id'] = new_user_id
+        db.save_data(profiles)
+        return new_user_id
 
 
 def generate_event_id():
     return str(uuid.uuid4())
 
-
+def store_code(name:str, code:str):
+    file = open(f"#_{name}_codes.txt", 'a')
+    file.write(f"{code}\n")
+    file.close()
+    
 async def get_promo_code(app_token: str,
                          promo_id: str,
                          promo_title: str,
@@ -117,7 +168,8 @@ async def get_promo_code(app_token: str,
     proxy_conn = aiohttp_proxy.ProxyConnector().from_url(proxy) if proxy else None
 
     async with aiohttp.ClientSession(headers=headers, connector=proxy_conn) as http_client:
-        client_id = generate_client_id()
+        client_id = get_or_generate_client_id(session_name, promo_title)
+        #client_id = get_or_generate_client_id_1(session_name)
 
         json_data = {
             "appToken": app_token,
@@ -132,17 +184,18 @@ async def get_promo_code(app_token: str,
         access_token = response_json.get("clientToken")
 
         if not access_token:
-            logger.debug(f"{session_name} | Can't login to api.gamepromo.io | Try with proxy | "
+            logger.debug(f"{session_name}\t | Can't login to api.gamepromo.io | Try with proxy | "
                          f"Response text: {escape_html(response_text)[:256]}...")
             return
 
         http_client.headers["Authorization"] = f"Bearer {access_token}"
 
-        await asyncio.sleep(delay=1)
+        await asyncio.sleep(delay=5)
 
         attempts = 0
-
+        tries = 0
         while attempts < max_attempts:
+            tries +=1 
             try:
 
                 event_id = generate_event_id()
@@ -154,9 +207,10 @@ async def get_promo_code(app_token: str,
 
                 response = await http_client.post(url="https://api.gamepromo.io/promo/register-event", json=json_data)
 
+                await asyncio.sleep(delay=1)
                 response_json = await response.json()
                 has_code = response_json.get("hasCode", False)
-
+                
                 if has_code:
                     json_data = {
                         "promoId": promo_id
@@ -169,20 +223,26 @@ async def get_promo_code(app_token: str,
                     promo_code = response_json.get("promoCode")
 
                     if promo_code:
-                        logger.info(f"{session_name} | "
-                                    f"Promo code is found for <lm>{promo_title}</lm> game: <lc>{promo_code}</lc>")
+                        store_code(session_name,promo_code)
+                        logger.info(f"{session_name}\t | "
+                                    f"Promo code is found for <lm>{promo_title}</lm>: <lc>{promo_code}</lc>")
                         return promo_code
             except Exception as error:
-                logger.debug(f"{session_name} | Error while getting promo code: {error}")
+                logger.debug(f"{session_name}\t | Error while getting promo code: {error} <lr>sleeping 10s</lr>")
+                if tries>5:
+                    logger.debug(f"{session_name}\t | More than 5 tries, RAISING error: {error}")
+                    raise
+                await asyncio.sleep(20*tries)
+                continue
 
             attempts += 1
-
+            new_event_timeout=event_timeout+random.randint(20, 30)
             logger.debug(
-                f"{session_name} | Attempt <lr>{attempts}</lr> was successful for <lm>{promo_title}</lm> game | "
-                f"Sleep <lw>{event_timeout}s</lw> before <lr>{attempts + 1}</lr> attempt to get promo code")
-            await asyncio.sleep(delay=event_timeout)
+                f"{session_name}\t | Attempt <lr>{attempts}</lr> was successful for <lm>{promo_title}</lm> | "
+                f"Sleep <lw>{new_event_timeout}s</lw> before attempt <lr>{attempts + 1}</lr>")
+            await asyncio.sleep(delay=new_event_timeout)
 
-    logger.debug(f"{session_name} | "
+    logger.debug(f"{session_name}\t | "
                  f"Promo code not found out of <lw>{max_attempts}</lw> attempts for <lm>{promo_title}</lm> game ")
 
 
