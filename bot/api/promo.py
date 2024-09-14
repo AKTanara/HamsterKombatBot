@@ -1,5 +1,4 @@
-
-from typing import Any, Union, Dict, List, Optional, Tuple
+from typing import Any
 
 import aiohttp
 
@@ -8,11 +7,14 @@ from bot.api.http import make_request
 
 async def get_apps_info(
         http_client: aiohttp.ClientSession,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
+    url = 'https://api21.datavibe.top/api/Games'
+    response = await http_client.request(method='OPTIONS', url=url, json={}, ssl=False)
+
     response_json = await make_request(
         http_client,
         'GET',
-        'https://api21.datavibe.top/api/Games',
+        url,
         {},
         'getting Apps Info'
     )
@@ -22,11 +24,14 @@ async def get_apps_info(
 
 async def get_promos(
         http_client: aiohttp.ClientSession
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
+    url = 'https://api.hamsterkombatgame.io/clicker/get-promos'
+    response = await http_client.request(method='OPTIONS', url=url, json={}, ssl=False)
+
     response_json = await make_request(
         http_client,
         'POST',
-        'https://api.hamsterkombatgame.io/clicker/get-promos',
+        url,
         {},
         'getting Promos'
     )
@@ -36,11 +41,14 @@ async def get_promos(
 
 async def apply_promo(
         http_client: aiohttp.ClientSession, promo_code: str
-) -> Tuple[Dict[Any, Any], Dict[Any, Any], Dict[Any, Any]]:
+) -> tuple[dict[Any, Any], dict[Any, Any], dict[Any, Any]]:
+    url = 'https://api.hamsterkombatgame.io/clicker/apply-promo'
+    response = await http_client.request(method='OPTIONS', url=url, json={}, ssl=False)
+
     response_json = await make_request(
         http_client,
         'POST',
-        'https://api.hamsterkombatgame.io/clicker/apply-promo',
+        url,
         {'promoCode': promo_code},
         'Apply Promo',
         ignore_status=422
