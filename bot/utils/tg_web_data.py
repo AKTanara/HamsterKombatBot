@@ -1,6 +1,5 @@
 import asyncio
 from urllib.parse import unquote
-from typing import Any, Union, Dict, List, Optional, Tuple
 
 from pyrogram import Client
 from pyrogram.errors import (
@@ -17,7 +16,7 @@ from bot.utils.proxy import get_proxy_dict
 
 
 async def get_tg_web_data(
-    tg_client: Client, proxy: Optional[str], session_name: str
+    tg_client: Client, proxy: str | None, session_name: str
 ) -> str:
     proxy_dict = get_proxy_dict(proxy)
 
@@ -46,9 +45,9 @@ async def get_tg_web_data(
             except FloodWait as fl:
                 fls = fl.value
 
-                logger.warning(f'{session_name} | FloodWait {fl}')
+                logger.warning(f'{session_name}\t | FloodWait {fl}')
                 fls *= 2
-                logger.info(f'{session_name} | Sleep {fls}s')
+                logger.info(f'{session_name}\t | Sleep {fls}s')
 
                 await asyncio.sleep(fls)
 
@@ -75,5 +74,5 @@ async def get_tg_web_data(
         raise error
 
     except Exception as error:
-        logger.error(f"{session_name} | Unknown error while getting Tg Web Data: {error}")
+        logger.error(f"{session_name}\t | Unknown error while getting Tg Web Data: {error}")
         await asyncio.sleep(delay=3)
