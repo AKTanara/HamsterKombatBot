@@ -1,5 +1,4 @@
-
-from typing import Any, Union, Dict, List, Optional, Tuple
+from typing import Any
 
 import aiohttp
 
@@ -8,11 +7,15 @@ from bot.api.http import make_request
 
 async def get_tasks(
         http_client: aiohttp.ClientSession,
-) -> Union[Dict[Any, Any], Any]:
+) -> dict[Any, Any] | Any:
+    
+    url = 'https://api.hamsterkombatgame.io/clicker/list-tasks'
+    response = await http_client.request(method='OPTIONS', url=url, json={}, ssl=False)
+    
     response_json = await make_request(
         http_client,
         'POST',
-        'https://api.hamsterkombatgame.io/clicker/list-tasks',
+        url,
         {},
         'getting Tasks',
     )
@@ -23,11 +26,15 @@ async def get_tasks(
 
 async def get_airdrop_tasks(
         http_client: aiohttp.ClientSession,
-) -> Union[Dict[Any, Any], Any]:
+) -> dict[Any, Any] | Any:
+    
+    url = 'https://api.hamsterkombatgame.io/clicker/list-airdrop-tasks'
+    response = await http_client.request(method='OPTIONS', url=url, json={}, ssl=False)
+    
     response_json = await make_request(
         http_client,
         'POST',
-        'https://api.hamsterkombatgame.io/clicker/list-airdrop-tasks',
+        url,
         {},
         'getting Airdrop Tasks',
     )
@@ -37,11 +44,15 @@ async def get_airdrop_tasks(
 
 async def check_task(
         http_client: aiohttp.ClientSession, task_id: str
-) -> Tuple[Dict[Any, Any], Dict[Any, Any]]:
+) -> tuple[dict[Any, Any], dict[Any, Any]]:
+
+    url = 'https://api.hamsterkombatgame.io/clicker/check-task'
+    response = await http_client.request(method='OPTIONS', url=url, json={}, ssl=False)
+
     response_json = await make_request(
         http_client,
         'POST',
-        'https://api.hamsterkombatgame.io/clicker/check-task',
+        url,
         {'taskId': task_id},
         'Check Task',
         ignore_status=422
